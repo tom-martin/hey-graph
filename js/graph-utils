@@ -1,8 +1,0 @@
-function mapZipNodes(nodes, callback) {
-  for(var nodeIndexA in nodes) {
-      var nodeA = nodes[nodeIndexA];
-      for(var nodeIndexB in nodes) {
-        var nodeB = nodes[nodeIndexB];
-      }
-  }
-}
