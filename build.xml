@@ -1,0 +1,31 @@
+
+<project name="hey-graph-js" default="concat" basedir=".">
+
+  <property file="build.properties"/>
+
+  <target name="init">
+    <mkdir dir="build"/>
+  </target>
+
+  <target name="clean">
+  </target>
+
+  <target name="concat" depends="init">
+    <concat destfile="build/hey-graph.js">
+      <filelist dir = "src">
+        <file name="base.js"/>
+        <file name="collection-utils.js"/>
+        <file name="vector-utils.js"/>
+        <file name="graph-utils.js"/>
+        <file name="hey-graph.js"/>
+      </filelist>
+    </concat>
+  </target>
+
+  <target name="build" depends="concat"/>
+  <target name="deploy" depends="build">
+    <copy file="build/hey-graph.js" todir="${deployLocation}"/>
+  </target>
+
+</project>
+
