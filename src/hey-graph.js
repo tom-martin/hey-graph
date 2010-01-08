@@ -1,4 +1,4 @@
-function gLGraphComponent(canvas, context, graphData) {
+function HeyGraph(canvas, context, graphData) {
   this.canvas = canvas;
   this.context = context;
   this.graphData = graphData;
@@ -76,7 +76,7 @@ function gLGraphComponent(canvas, context, graphData) {
         this.temp = Math.max(this.temp - 1, 1);
 
         if(this.temp == 1 && this.tempBeforeReset > this.maxTemp * this.maxTemp) {
-          console.log("resetting temp to " + this.maxTemp);
+      //    console.log("resetting temp to " + this.maxTemp);
           this.temp = this.maxTemp;
           this.tempBeforeReset = 0;
         }
@@ -93,13 +93,13 @@ function gLGraphComponent(canvas, context, graphData) {
           var totalChange = 0;    
           for(var nodeIndex in this.graphData.nodes) {
             var nodeId = this.graphData.nodes[nodeIndex].graphId;
-            var change = Math.abs(hey_graph.vectorUtils.magnitude(hey_graph.vectorUtils.differenceVector(this.previousNodePositions[nodeId], currentNodePositions[nodeId])));
+            var change = Math.abs(HeyGraph.VectorUtils.magnitude(HeyGraph.VectorUtils.differenceVector(this.previousNodePositions[nodeId], currentNodePositions[nodeId])));
             totalChange += change;
             maxChange = Math.max(maxChange, change);
           }
           var averageChange = totalChange / this.graphData.nodes.length;
 
-          console.log("Temp : " + this.temp + " | Max Change : " + maxChange + " | Average change : " + averageChange + " | Iterations" + this.nodeHistoryCounter);
+//          console.log("Temp : " + this.temp + " | Max Change : " + maxChange + " | Average change : " + averageChange + " | Iterations" + this.nodeHistoryCounter);
 
           this.layoutDone = (maxChange < 0.5 || averageChange < 0.1);
           this.previousNodePositions = currentNodePositions;
@@ -208,8 +208,8 @@ function gLGraphComponent(canvas, context, graphData) {
       for(var nodeIndexB in this.graphData.nodes) {
         var nodeB = this.graphData.nodes[nodeIndexB];
         
-        var diff = hey_graph.vectorUtils.differenceVector(nodeA, nodeB);
-        var diffMagnitude = hey_graph.vectorUtils.magnitude(diff);
+        var diff = HeyGraph.VectorUtils.differenceVector(nodeA, nodeB);
+        var diffMagnitude = HeyGraph.VectorUtils.magnitude(diff);
         
         if(diffMagnitude != 0) {
           disp.x += (diff.x / diffMagnitude) * repulsiveForce(diffMagnitude, this.k);
@@ -224,8 +224,8 @@ function gLGraphComponent(canvas, context, graphData) {
   this.calculateAttractiveDisplacement = function (nodeDisplacement) {
     for(var edgeIndex in this.graphData.edges) {
       var edge = this.graphData.edges[edgeIndex];
-      var diff = hey_graph.vectorUtils.differenceVector(this.nodesHash[edge.nodeAId], this.nodesHash[edge.nodeBId]);
-      var diffMagnitude = hey_graph.vectorUtils.magnitude(diff);    
+      var diff = HeyGraph.VectorUtils.differenceVector(this.nodesHash[edge.nodeAId], this.nodesHash[edge.nodeBId]);
+      var diffMagnitude = HeyGraph.VectorUtils.magnitude(diff);    
 
       if(diffMagnitude != 0) {
         var nodeADisplacement = nodeDisplacement[edge.nodeAId];
@@ -245,7 +245,7 @@ function gLGraphComponent(canvas, context, graphData) {
       var node = this.nodesHash[nodeIndex];
       var disp = nodeDisplacement[nodeIndex];
       
-      var dispMagnitude = hey_graph.vectorUtils.magnitude(disp);
+      var dispMagnitude = HeyGraph.VectorUtils.magnitude(disp);
 
       if(dispMagnitude != 0) {
 

@@ -1,0 +1,46 @@
+body {
+  background-color: #000019;
+  background-image: url(../img/bg.gif);
+  background-repeat: repeat-x;
+  
+  color:#EFEFEF;
+  font-family:Arial,sans-serif;
+  font-size:0.84em;
+  font-size-adjust:none;
+  font-style:normal;
+  font-variant:normal;
+  font-weight:normal;
+  line-height:1.333;
+}
+
+a {
+  color:#EFEFEF;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+a:hover {
+  color:#AAAAEF;
+}
+
+a:visited {
+  color:#8888EF;
+}
+
+div.content {
+  width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+textarea {
+  width: 100%;
+  background-color: #000019;
+  color:#EFEFEF;
+}
+
+canvas {
+  border-width: 1px;
+  border-style: dotted;
+  border-color: #000019;
+}

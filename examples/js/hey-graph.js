@@ -1,12 +1,11 @@
-var hey_graph = hey_graph || {};
-hey_graph.collectionUtils = hey_graph.collectionUtils || {};
+var HeyGraph = HeyGraph || {};
+HeyGraph.CollectionUtils = HeyGraph.CollectionUtils || {};
 
-
-hey_graph.collectionUtils.contains = function(container, callback) {
+HeyGraph.CollectionUtils.contains = function(container, callback) {
   return this.find(container, callback) != null;
 };
 
-hey_graph.collectionUtils.find = function(container, callback) {
+HeyGraph.CollectionUtils.find = function(container, callback) {
   for(var index in container) {
     var potential = container[index];
     if(callback.call(potential)) {
@@ -17,7 +16,7 @@ hey_graph.collectionUtils.find = function(container, callback) {
   return null;
 };
 
-hey_graph.collectionUtils.filter = function(container, callback) {
+HeyGraph.CollectionUtils.filter = function(container, callback) {
   var matches = [];
   for(var index in container) {
     var potential = container[index];
@@ -29,7 +28,7 @@ hey_graph.collectionUtils.filter = function(container, callback) {
   return matches;
 };
 
-hey_graph.collectionUtils.reduce = function(container, callback, initial) {
+HeyGraph.CollectionUtils.reduce = function(container, callback, initial) {
   var current = null;
   for(var index in container) {
     if(current == null) {
@@ -45,33 +44,35 @@ hey_graph.collectionUtils.reduce = function(container, callback, initial) {
 
   return current;
 };
-hey_graph.vectorUtils = hey_graph.vectorUtils || {};
+HeyGraph.VectorUtils = HeyGraph.VectorUtils || {};
 
-hey_graph.vectorUtils.differenceVector = function(vectorA, vectorB) {
+HeyGraph.VectorUtils.differenceVector = function(vectorA, vectorB) {
   var diff = {};
   diff.x = vectorA.x - vectorB.x;
   diff.y = vectorA.y - vectorB.y;
   return diff;
 }
 
-hey_graph.vectorUtils.magnitude = function(vector) {
+HeyGraph.VectorUtils.magnitude = function(vector) {
   return Math.sqrt((vector.x * vector.x) + (vector.y * vector.y));
 };
 
-function normalizeGraph(graphData) {
+HeyGraph.GraphUtils = HeyGraph.GraphUtils || {};
+
+HeyGraph.GraphUtils.normalizeGraph = function(graphData) {
   var graphs = [];
 
   for(var nodeIndex in graphData.nodes) {
     var node = graphData.nodes[nodeIndex];
-    if(!hey_graph.collectionUtils.contains(graphs, function() {
-        return hey_graph.collectionUtils.contains(this.nodes, function() {
+    if(!HeyGraph.CollectionUtils.contains(graphs, function() {
+        return HeyGraph.CollectionUtils.contains(this.nodes, function() {
           return this.graphId = node.graphId;
           });
       })) {
       var newGraph = {};
       newGraph.nodes = [];
       newGraph.edges = [];
-      addNodeToGraph(node, newGraph, graphData);
+      this.addNodeToGraph(node, newGraph, graphData);
       graphs.push(newGraph);
       break;
     }
@@ -80,46 +81,36 @@ function normalizeGraph(graphData) {
   return graphs;
 };
 
-function arrayIndexOf(arrayToSearch, target) {
-  for(var arrayIndex in arrayToSearch) {
-    if(arrayToSearch[arrayIndex] === target) {
-      return arrayIndex;
-    }
-  }
-
-  return -1;
-};
-
-function addNodeToGraph(node, newGraph, graphData) {
-  if(findNodeForId(node.graphId, newGraph) == null) {
+HeyGraph.GraphUtils.addNodeToGraph = function(node, newGraph, graphData) {
+  if(this.findNodeForId(node.graphId, newGraph) == null) {
     newGraph.nodes.push(node);
-    var allEdges = allEdgesForNode(graphData.edges, node.graphId);
+    var allEdges = this.allEdgesForNode(graphData.edges, node.graphId);
     for(edgeIndex in allEdges) {
       var edge = allEdges[edgeIndex];
       newGraph.edges.push(edge);
       if(edge.nodeAId == node.graphId) {
-        addNodeToGraph(findNodeForId(edge.nodeBId, graphData), newGraph, graphData);
+        this.addNodeToGraph(this.findNodeForId(edge.nodeBId, graphData), newGraph, graphData);
       } else {
-        addNodeToGraph(findNodeForId(edge.nodeAId, graphData), newGraph, graphData);
+        this.addNodeToGraph(this.findNodeForId(edge.nodeAId, graphData), newGraph, graphData);
       }
     }
   }
 };
 
-function findNodeForId(nodeId, graphData) {
-  return hey_graph.collectionUtils.find(graphData.nodes, function() {
+HeyGraph.GraphUtils.findNodeForId = function(nodeId, graphData) {
+  return HeyGraph.CollectionUtils.find(graphData.nodes, function() {
     return nodeId == this.graphId;
   });
 }
 
-function allEdgesForNode(edges, nodeId) {
-  return hey_graph.collectionUtils.filter(edges, function(edge) {
+HeyGraph.GraphUtils.allEdgesForNode = function(edges, nodeId) {
+  return HeyGraph.CollectionUtils.filter(edges, function(edge) {
     return (this.nodeAId == nodeId ||
             this.nodeBId == nodeId);
   });
 };
 
-function gLGraphComponent(canvas, context, graphData) {
+function HeyGraph(canvas, context, graphData) {
   this.canvas = canvas;
   this.context = context;
   this.graphData = graphData;
@@ -197,7 +188,7 @@ function gLGraphComponent(canvas, context, graphData) {
         this.temp = Math.max(this.temp - 1, 1);
 
         if(this.temp == 1 && this.tempBeforeReset > this.maxTemp * this.maxTemp) {
-          console.log("resetting temp to " + this.maxTemp);
+      //    console.log("resetting temp to " + this.maxTemp);
           this.temp = this.maxTemp;
           this.tempBeforeReset = 0;
         }
@@ -214,13 +205,13 @@ function gLGraphComponent(canvas, context, graphData) {
           var totalChange = 0;    
           for(var nodeIndex in this.graphData.nodes) {
             var nodeId = this.graphData.nodes[nodeIndex].graphId;
-            var change = Math.abs(hey_graph.vectorUtils.magnitude(hey_graph.vectorUtils.differenceVector(this.previousNodePositions[nodeId], currentNodePositions[nodeId])));
+            var change = Math.abs(HeyGraph.VectorUtils.magnitude(HeyGraph.VectorUtils.differenceVector(this.previousNodePositions[nodeId], currentNodePositions[nodeId])));
             totalChange += change;
             maxChange = Math.max(maxChange, change);
           }
           var averageChange = totalChange / this.graphData.nodes.length;
 
-          console.log("Temp : " + this.temp + " | Max Change : " + maxChange + " | Average change : " + averageChange + " | Iterations" + this.nodeHistoryCounter);
+//          console.log("Temp : " + this.temp + " | Max Change : " + maxChange + " | Average change : " + averageChange + " | Iterations" + this.nodeHistoryCounter);
 
           this.layoutDone = (maxChange < 0.5 || averageChange < 0.1);
           this.previousNodePositions = currentNodePositions;
@@ -329,8 +320,8 @@ function gLGraphComponent(canvas, context, graphData) {
       for(var nodeIndexB in this.graphData.nodes) {
         var nodeB = this.graphData.nodes[nodeIndexB];
         
-        var diff = hey_graph.vectorUtils.differenceVector(nodeA, nodeB);
-        var diffMagnitude = hey_graph.vectorUtils.magnitude(diff);
+        var diff = HeyGraph.VectorUtils.differenceVector(nodeA, nodeB);
+        var diffMagnitude = HeyGraph.VectorUtils.magnitude(diff);
         
         if(diffMagnitude != 0) {
           disp.x += (diff.x / diffMagnitude) * repulsiveForce(diffMagnitude, this.k);
@@ -345,8 +336,8 @@ function gLGraphComponent(canvas, context, graphData) {
   this.calculateAttractiveDisplacement = function (nodeDisplacement) {
     for(var edgeIndex in this.graphData.edges) {
       var edge = this.graphData.edges[edgeIndex];
-      var diff = hey_graph.vectorUtils.differenceVector(this.nodesHash[edge.nodeAId], this.nodesHash[edge.nodeBId]);
-      var diffMagnitude = hey_graph.vectorUtils.magnitude(diff);    
+      var diff = HeyGraph.VectorUtils.differenceVector(this.nodesHash[edge.nodeAId], this.nodesHash[edge.nodeBId]);
+      var diffMagnitude = HeyGraph.VectorUtils.magnitude(diff);    
 
       if(diffMagnitude != 0) {
         var nodeADisplacement = nodeDisplacement[edge.nodeAId];
@@ -366,7 +357,7 @@ function gLGraphComponent(canvas, context, graphData) {
       var node = this.nodesHash[nodeIndex];
       var disp = nodeDisplacement[nodeIndex];
       
-      var dispMagnitude = hey_graph.vectorUtils.magnitude(disp);
+      var dispMagnitude = HeyGraph.VectorUtils.magnitude(disp);
 
       if(dispMagnitude != 0) {
 

@@ -1,11 +1,10 @@
-hey_graph.collectionUtils = hey_graph.collectionUtils || {};
+HeyGraph.CollectionUtils = HeyGraph.CollectionUtils || {};
 
-
-hey_graph.collectionUtils.contains = function(container, callback) {
+HeyGraph.CollectionUtils.contains = function(container, callback) {
   return this.find(container, callback) != null;
 };
 
-hey_graph.collectionUtils.find = function(container, callback) {
+HeyGraph.CollectionUtils.find = function(container, callback) {
   for(var index in container) {
     var potential = container[index];
     if(callback.call(potential)) {
@@ -16,7 +15,7 @@ hey_graph.collectionUtils.find = function(container, callback) {
   return null;
 };
 
-hey_graph.collectionUtils.filter = function(container, callback) {
+HeyGraph.CollectionUtils.filter = function(container, callback) {
   var matches = [];
   for(var index in container) {
     var potential = container[index];
@@ -28,7 +27,7 @@ hey_graph.collectionUtils.filter = function(container, callback) {
   return matches;
 };
 
-hey_graph.collectionUtils.reduce = function(container, callback, initial) {
+HeyGraph.CollectionUtils.reduce = function(container, callback, initial) {
   var current = null;
   for(var index in container) {
     if(current == null) {

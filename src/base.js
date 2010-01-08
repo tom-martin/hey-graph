@@ -1,1 +1,1 @@
-var hey_graph = hey_graph || {};
+var HeyGraph = HeyGraph || {};
