@@ -143,9 +143,11 @@ function HeyGraph(canvas, context, graphData) {
 
   this.NODE_WIDTH = 20;
 
-  this.maxTemp = Math.min(canvas.width / 10, graphData.nodes.length + graphData.edges.length, canvas.height / 10);
-  this.temp = Math.min(canvas.width / 10, graphData.nodes.length + graphData.edges.length, canvas.height / 10);
+  this.maxTemp = graphData.nodes.length + Math.floor(Math.sqrt(graphData.edges.length));
+  this.temp = this.maxTemp;
   this.tempDiff = -0.5;
+
+//  console.log("Initial temp " + this.maxTemp);
 
   var area = canvas.width * canvas.height;
   this.k = Math.sqrt(area / graphData.nodes.length);
@@ -158,14 +160,16 @@ function HeyGraph(canvas, context, graphData) {
   this.nodeHistoryCounter = 0;
   this.tempBeforeReset = 0;
 
+  var preUpdateTime = new Date().getTime();
   var thisGraph = this;
   var updater = function() {
     this.update = function() {
       if(thisGraph.update(1000 / 30)) {
         clearInterval(clearUpdateInt);
         thisGraph.render();
+//        console.log("Time taken " + (new Date().getTime() - preUpdateTime));
       }
-    };        
+    };
 
     var clearUpdateInt = setInterval(this.update, 1000 / 30);
   };
@@ -185,7 +189,7 @@ function HeyGraph(canvas, context, graphData) {
 
         this.nodeHistoryCounter++;
         this.tempBeforeReset++;
-        this.temp = Math.max(this.temp - 1, 1);
+        this.temp = Math.max(this.temp - (this.maxTemp / 100), 1);
 
         if(this.temp == 1 && this.tempBeforeReset > this.maxTemp * this.maxTemp) {
       //    console.log("resetting temp to " + this.maxTemp);
@@ -200,21 +204,7 @@ function HeyGraph(canvas, context, graphData) {
  //       }
 
         if(this.nodeHistoryCounter % 100 == 0) {
-          var currentNodePositions = this.storePositions();
-          var maxChange = 0;
-          var totalChange = 0;    
-          for(var nodeIndex in this.graphData.nodes) {
-            var nodeId = this.graphData.nodes[nodeIndex].graphId;
-            var change = Math.abs(HeyGraph.VectorUtils.magnitude(HeyGraph.VectorUtils.differenceVector(this.previousNodePositions[nodeId], currentNodePositions[nodeId])));
-            totalChange += change;
-            maxChange = Math.max(maxChange, change);
-          }
-          var averageChange = totalChange / this.graphData.nodes.length;
-
-//          console.log("Temp : " + this.temp + " | Max Change : " + maxChange + " | Average change : " + averageChange + " | Iterations" + this.nodeHistoryCounter);
-
-          this.layoutDone = (maxChange < 0.5 || averageChange < 0.1);
-          this.previousNodePositions = currentNodePositions;
+          this.isLayoutDone();
         }
 
         current = new Date().getTime();
@@ -223,9 +213,52 @@ function HeyGraph(canvas, context, graphData) {
 
     this.render();
 
-  //  console.log(this.temp + ", " + this.nodeHistoryCounter);
+   //   console.log(this.temp + ", " + this.nodeHistoryCounter);
 
     return this.layoutDone;
+  };
+
+  this.isLayoutDone = function() {
+    var currentNodePositions = this.storePositions();
+    var maxChange = 0;
+    var totalChange = 0;
+
+    var minPosition;    
+    var maxPosition;
+
+    for(var nodeIndex in this.graphData.nodes) {
+      var nodeId = this.graphData.nodes[nodeIndex].graphId;
+      var nodePosition = currentNodePositions[nodeId];
+
+      if(minPosition) {
+        minPosition.x = Math.min(minPosition.x, nodePosition.x); 
+        minPosition.y = Math.min(minPosition.y, nodePosition.y);
+        maxPosition.x = Math.max(maxPosition.x, nodePosition.x);
+        maxPosition.y = Math.max(maxPosition.y, nodePosition.y);
+
+      } else {
+        minPosition = {};
+        maxPosition = {};
+
+        minPosition.x = nodePosition.x;
+        minPosition.y = nodePosition.y;
+        maxPosition.x = nodePosition.x;  
+        maxPosition.y = nodePosition.y;
+      }
+
+      var change = Math.abs(HeyGraph.VectorUtils.magnitude(HeyGraph.VectorUtils.differenceVector(this.previousNodePositions[nodeId], nodePosition)));
+      totalChange += change;
+      maxChange = Math.max(maxChange, change);
+    }
+    var averageChange = totalChange / this.graphData.nodes.length;
+
+    var graphMagnitude = Math.abs(HeyGraph.VectorUtils.magnitude(HeyGraph.VectorUtils.differenceVector(minPosition, maxPosition)));
+    var canvasMagnitude = Math.abs(HeyGraph.VectorUtils.magnitude({"x":this.canvas.width, "y":this.canvas.height}));
+
+    //          console.log("Temp : " + this.temp + " | Max Change : " + maxChange + " | Average change : " + averageChange + " | Iterations" + this.nodeHistoryCounter + " | terminator " + (graphMagnitude / canvasMagnitude));
+
+    this.layoutDone = (maxChange < ((graphMagnitude / canvasMagnitude) * 10) || averageChange < ((graphMagnitude / canvasMagnitude) * 5));
+    this.previousNodePositions = currentNodePositions;
   };
 
   this.render = function() {
