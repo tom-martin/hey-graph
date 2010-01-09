@@ -24,53 +24,58 @@ $(function() {
     var context = canvas.getContext('2d');
     if (context) {
   
-      var graphData = createRandomGraph();
+      var graphData = createRandomGraph(false);
       $("pre").text(JSON.stringify(graphData, null, 1));
       var gLGraph = new HeyGraph(canvas, context, graphData);
     }
   }
 });
 
-function createRandomGraph() {
+function createRandomGraph(mesh) {
   var graphData = {};
-  graphData.nodes = [];
 
-  // Random number of nodes (max 50, at least 1)
-  var nodeCount = Math.floor(Math.random() * 50) + 1;
+  if(mesh) {
+    graphData = createMesh();
+  } else {
+    graphData.nodes = [];
 
-  // Higher spikiness means how more nodes with lots of leaf nodes around them. Spikiness of 1 means
-  // a very dense graph
-  var spikinessMin = 1;
-  // More nodes than 20 and a dense graph would be too dense
-  if(nodeCount > 10) {
-    spikinessMin = 2;
-  }
-  var spikiness = Math.min(15, Math.max(spikinessMin, (Math.floor(Math.random() * nodeCount)) - 10));
+    // Random number of nodes (max 50, at least 1)
+    var nodeCount = Math.floor(Math.random() * 50) + 1;
 
-  for(var nodeIndex = 0; nodeIndex < nodeCount; nodeIndex ++) {
-    var newNode = {};
-    newNode.graphId = "id" + nodeIndex;
-    graphData.nodes.push(newNode);
-  }
+    // Higher spikiness means how more nodes with lots of leaf nodes around them. Spikiness of 1 means
+    // a very dense graph
+    var spikinessMin = 1;
+    // More nodes than 20 and a dense graph would be too dense
+    if(nodeCount > 10) {
+      spikinessMin = 2;
+    }
+    var spikiness = Math.min(15, Math.max(spikinessMin, (Math.floor(Math.random() * nodeCount)) - 10));
 
-  graphData.edges = [];
+    for(var nodeIndex = 0; nodeIndex < nodeCount; nodeIndex ++) {
+      var newNode = {};
+      newNode.graphId = "id" + nodeIndex;
+      graphData.nodes.push(newNode);
+    }
 
-  for(var nodeIndexA in graphData.nodes) {
-    var nodeA = graphData.nodes[nodeIndexA];
+    graphData.edges = [];
 
-    for(var nodeIndexB in graphData.nodes) {
-      var nodeB = graphData.nodes[nodeIndexB];
+    for(var nodeIndexA in graphData.nodes) {
+      var nodeA = graphData.nodes[nodeIndexA];
 
-      if(nodeIndexA != nodeIndexB &&
-         Math.floor(Math.random() * nodeCount) < (nodeIndexB * spikiness)) {
-        var edge = {};
-        edge.nodeAId = nodeA.graphId;
-        edge.nodeBId = nodeB.graphId;
-        
-        graphData.edges.push(edge);
+      for(var nodeIndexB in graphData.nodes) {
+        var nodeB = graphData.nodes[nodeIndexB];
 
-        if(spikiness > 1) {
-          break;
+        if(nodeIndexA != nodeIndexB &&
+           Math.floor(Math.random() * nodeCount) < (nodeIndexB * spikiness)) {
+          var edge = {};
+          edge.nodeAId = nodeA.graphId;
+          edge.nodeBId = nodeB.graphId;
+          
+          graphData.edges.push(edge);
+
+          if(spikiness > 1) {
+            break;
+          }
         }
       }
     }
@@ -90,7 +95,7 @@ function createRandomGraph() {
 
   // If less than 6 then a boring graph has been created, start again
   if(graphData.nodes.length < 6) {
-    return createRandomGraph();
+    return createRandomGraph(!mesh);
   } else {
     var nodesWithMoreThanOneEdge = 0;
     for(var nodeIndex in graphData.nodes) {
@@ -100,17 +105,51 @@ function createRandomGraph() {
     }
 
     // If only a couple of nodes have more than one edge it is also a "boring" graph
-    if(nodesWithMoreThanOneEdge > 2) {
+    if(nodesWithMoreThanOneEdge > 3) {
       return graphData;
     } else {
-      return createRandomGraph();
+      return createRandomGraph(!mesh);
     }
   }
 };
 
-function rgb2Hex(red, green, blue) {
-  var decColor = red + 256 * green + 65536 * blue;
-  return decColor.toString(16);
+function createMesh() {
+  var graphData = {};
+  graphData.nodes = [];
+  graphData.edges= [];
+
+  var meshSize = 7;
+
+  for(var nodeIndex = 0; nodeIndex < meshSize * meshSize; nodeIndex ++) {
+    var newNode = {};
+    newNode.graphId = "id" + nodeIndex;
+    graphData.nodes.push(newNode);
+  }
+
+  var createEdge = function(nodeAIndex, nodeBIndex) {
+    var edge = {};
+
+    edge.nodeAId = graphData.nodes[nodeAIndex].graphId;
+    edge.nodeBId = graphData.nodes[nodeBIndex].graphId;
+
+    return edge;
+  };
+
+  for(var nodeIndex = 0; nodeIndex < graphData.nodes.length; nodeIndex ++) {
+
+    if(Math.floor(Math.random() * meshSize) != 0) {
+      if(nodeIndex + 1 < graphData.nodes.length && (nodeIndex + 1) % meshSize != 0) {
+        graphData.edges.push(createEdge(nodeIndex, nodeIndex + 1));
+      }
+
+      if(nodeIndex + meshSize < graphData.nodes.length) {
+        graphData.edges.push(createEdge(nodeIndex, nodeIndex + meshSize));
+      }
+    }
+  }
+  
+  return graphData;
+  
 }
 
     </script>
