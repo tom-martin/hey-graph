@@ -9,6 +9,7 @@ function ForceDirectedLayout(graphData, width, height) {
   this.temperature = graphData.nodes.length + Math.floor(Math.sqrt(graphData.edges.length));
   this.minimumTemperature = 1;
   this.initialTemperature = this.temperature;
+  this.iteration = 0;
 
   for(var nodeIndex in graphData.nodes) {
     var currentNode = graphData.nodes[nodeIndex];
@@ -174,10 +175,10 @@ ForceDirectedLayout.prototype.update = function(time) {
       this.calculateAttractiveDisplacement(nodeDisplacement);
       this.applyDisplacement(nodeDisplacement);
 
-      graph.nodeHistoryCounter++;
+      this.iteration++;
       this.temperature = Math.max(this.temperature - (this.initialTemperature / 100), this.minimumTemperature);
 
-      if(graph.nodeHistoryCounter % 10 == 0) {
+      if(this.iteration % 10 == 0) {
         this.isLayoutDone();
       }
 

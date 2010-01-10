@@ -15,9 +15,6 @@ function HeyGraph(canvas, context, graphData, layoutTime) {
 
   this.NODE_WIDTH = 20;
 
-
-  this.nodeHistoryCounter = 0;
-
   this.layout = new ForceDirectedLayout(this.graphData, canvas.width, canvas.height);
 
   var thisGraph = this;
