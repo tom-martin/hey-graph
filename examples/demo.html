@@ -26,7 +26,8 @@ $(function() {
   
       var graphData = createRandomGraph(false);
       $("pre").text(JSON.stringify(graphData, null, 1));
-      var gLGraph = new HeyGraph(canvas, context, graphData);
+      var heyGraph = new HeyGraph(canvas, context, graphData, 10);
+      heyGraph.start();
     }
   }
 });
