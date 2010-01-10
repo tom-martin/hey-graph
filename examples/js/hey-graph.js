@@ -110,11 +110,10 @@ HeyGraph.GraphUtils.allEdgesForNode = function(edges, nodeId) {
   });
 };
 
-function ForceDirectedLayout(graphData, width, height, graph) {
+function ForceDirectedLayout(graphData, width, height) {
   this.width = width;
   this.height = height;
   this.graphData = graphData;
-  this.graph = graph;
   this.layoutDone = false;
   this.nodesHash = {};
   var area = width * height;
@@ -122,6 +121,7 @@ function ForceDirectedLayout(graphData, width, height, graph) {
   this.temperature = graphData.nodes.length + Math.floor(Math.sqrt(graphData.edges.length));
   this.minimumTemperature = 1;
   this.initialTemperature = this.temperature;
+  this.iteration = 0;
 
   for(var nodeIndex in graphData.nodes) {
     var currentNode = graphData.nodes[nodeIndex];
@@ -276,7 +276,6 @@ ForceDirectedLayout.prototype.initialLayout = function() {
 };
 
 ForceDirectedLayout.prototype.update = function(time) {
-  var graph = this.graph;
   var beginning = new Date().getTime();
   var current = beginning;
   var previousNodePositions = this.storePositions();
@@ -288,10 +287,10 @@ ForceDirectedLayout.prototype.update = function(time) {
       this.calculateAttractiveDisplacement(nodeDisplacement);
       this.applyDisplacement(nodeDisplacement);
 
-      graph.nodeHistoryCounter++;
+      this.iteration++;
       this.temperature = Math.max(this.temperature - (this.initialTemperature / 100), this.minimumTemperature);
 
-      if(graph.nodeHistoryCounter % 10 == 0) {
+      if(this.iteration % 10 == 0) {
         this.isLayoutDone();
       }
 
@@ -318,10 +317,7 @@ function HeyGraph(canvas, context, graphData, layoutTime) {
 
   this.NODE_WIDTH = 20;
 
-
-  this.nodeHistoryCounter = 0;
-
-  this.layout = new ForceDirectedLayout(this.graphData, canvas.width, canvas.height, this);
+  this.layout = new ForceDirectedLayout(this.graphData, canvas.width, canvas.height);
 
   var thisGraph = this;
   this.start = function() {
