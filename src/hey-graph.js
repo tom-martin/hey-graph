@@ -18,7 +18,7 @@ function HeyGraph(canvas, context, graphData, layoutTime) {
 
   this.nodeHistoryCounter = 0;
 
-  this.layout = new ForceDirectedLayout(this.graphData, canvas.width, canvas.height, this);
+  this.layout = new ForceDirectedLayout(this.graphData, canvas.width, canvas.height);
 
   var thisGraph = this;
   this.start = function() {

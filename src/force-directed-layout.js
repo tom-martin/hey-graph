@@ -1,8 +1,7 @@
-function ForceDirectedLayout(graphData, width, height, graph) {
+function ForceDirectedLayout(graphData, width, height) {
   this.width = width;
   this.height = height;
   this.graphData = graphData;
-  this.graph = graph;
   this.layoutDone = false;
   this.nodesHash = {};
   var area = width * height;
@@ -164,7 +163,6 @@ ForceDirectedLayout.prototype.initialLayout = function() {
 };
 
 ForceDirectedLayout.prototype.update = function(time) {
-  var graph = this.graph;
   var beginning = new Date().getTime();
   var current = beginning;
   var previousNodePositions = this.storePositions();
