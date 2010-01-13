@@ -147,13 +147,13 @@ function ForceDirectedLayout(graphData, width, height) {
 
         var xDisp = (disp.x / dispMagnitude) * Math.abs(disp.x);
         var yDisp = (disp.y / dispMagnitude) * Math.abs(disp.y);
-
-        minX = Math.min(minX, node.x);
-        minY = Math.min(minY, node.y);
-
-        maxX = Math.max(maxX, node.x);
-        maxY = Math.max(maxY, node.y);
       }
+
+      minX = Math.min(minX, node.x);
+      minY = Math.min(minY, node.y);
+
+      maxX = Math.max(maxX, node.x);
+      maxY = Math.max(maxY, node.y);
     }
 
     this.layoutBounds.x = minX;
