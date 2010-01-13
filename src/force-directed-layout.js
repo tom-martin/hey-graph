@@ -10,6 +10,7 @@ function ForceDirectedLayout(graphData, width, height) {
   this.minimumTemperature = 1;
   this.initialTemperature = this.temperature;
   this.iteration = 0;
+  this.layoutProgess = 0;
 
   for(var nodeIndex in graphData.nodes) {
     var currentNode = graphData.nodes[nodeIndex];
@@ -109,15 +110,19 @@ function ForceDirectedLayout(graphData, width, height) {
 
 
       this.minimumTemperature = (graphMagnitude / canvasMagnitude);
-      this.layoutDone = averageChange < (this.minimumTemperature / 2);
+      this.layoutDone = averageChange < (this.minimumTemperature / 2) && (this.temperature <= this.minimumTemperature);
       this.previousNodePositions = currentNodePositions;
 
       if(this.initialProgress == null && this.temperature <= this.minimumTemperature) {
         this.initialProgress = averageChange - (this.minimumTemperature / 2);
       }
 
-      if(this.initialProgress != null) {
+      if(this.initialProgress != null && this.minimumTemperature != 0) {
         this.layoutProgress = Math.max(this.layoutProgress, 1 - ((averageChange - (this.minimumTemperature / 2)) / this.initialProgress));
+      }
+
+      if(this.layoutDone) {
+        this.layoutProgress = 1;
       }
     };
   };
@@ -168,22 +173,22 @@ ForceDirectedLayout.prototype.update = function(time) {
   var current = beginning;
   var previousNodePositions = this.storePositions();
 
-  if(!this.layoutDone) {
-    while(current - beginning < time) {
-      var nodeDisplacement = [];
-      this.calculateRepulsiveDisplacement(nodeDisplacement);
-      this.calculateAttractiveDisplacement(nodeDisplacement);
-      this.applyDisplacement(nodeDisplacement);
+  while(current - beginning < time && !this.layoutDone) {
+    var nodeDisplacement = [];
+    this.calculateRepulsiveDisplacement(nodeDisplacement);
+    this.calculateAttractiveDisplacement(nodeDisplacement);
+    this.applyDisplacement(nodeDisplacement);
 
-      this.iteration++;
-      this.temperature = Math.max(this.temperature - (this.initialTemperature / 100), this.minimumTemperature);
-
-      if(this.iteration % 10 == 0) {
-        this.isLayoutDone();
-      }
-
-      current = new Date().getTime();
+    this.temperature -= (this.initialTemperature / 100);
+    if(this.iteration % 10 == 0) {
+      this.isLayoutDone();
     }
+
+    this.temperature = Math.max(this.temperature, this.minimumTemperature);
+
+    this.iteration++;
+
+    current = new Date().getTime();
   }
 
   return this.layoutDone;
