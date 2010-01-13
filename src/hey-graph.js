@@ -36,7 +36,6 @@ function HeyGraph(canvas, context, graphData, layoutTime) {
         var preRenderTime = new Date().getTime();
         thisGraph.render();
         timeForLastRender = Math.min(thisGraph.MILLIS_PER_FRAME / 2, new Date().getTime() - preRenderTime);
-        console.log("Time for last render was " + timeForLastRender);
       };
 
       var clearUpdateInt = setInterval(this.update, this.MILLIS_PER_FRAME);
