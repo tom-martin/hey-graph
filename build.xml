@@ -16,6 +16,7 @@
         <file name="base.js"/>
         <file name="collection-utils.js"/>
         <file name="vector-utils.js"/>
+        <file name="simple-node-renderer.js"/>
         <file name="graph-utils.js"/>
         <file name="force-directed-layout.js"/>
         <file name="hey-graph.js"/>

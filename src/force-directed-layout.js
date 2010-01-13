@@ -11,6 +11,7 @@ function ForceDirectedLayout(graphData, width, height) {
   this.initialTemperature = this.temperature;
   this.iteration = 0;
   this.layoutProgess = 0;
+  this.layoutBounds = {"x":0, "y":0, "width":0, "height":0};
 
   for(var nodeIndex in graphData.nodes) {
     var currentNode = graphData.nodes[nodeIndex];
@@ -128,7 +129,11 @@ function ForceDirectedLayout(graphData, width, height) {
   };
 
   this.applyDisplacement = function(nodeDisplacement) {
-    var biggestDisplacement = -1;
+    var minX = Number.MAX_VALUE;
+    var minY = Number.MAX_VALUE;
+    var maxX = -Number.MAX_VALUE;
+    var maxY = -Number.MAX_VALUE;
+
     for(var nodeIndex in nodeDisplacement) {
       var node = this.nodesHash[nodeIndex];
       var disp = nodeDisplacement[nodeIndex];
@@ -143,10 +148,18 @@ function ForceDirectedLayout(graphData, width, height) {
         var xDisp = (disp.x / dispMagnitude) * Math.abs(disp.x);
         var yDisp = (disp.y / dispMagnitude) * Math.abs(disp.y);
 
-        biggestDisplacement = Math.max(biggestDisplacement, Math.abs(xDisp), Math.abs(yDisp));
+        minX = Math.min(minX, node.x);
+        minY = Math.min(minY, node.y);
+
+        maxX = Math.max(maxX, node.x);
+        maxY = Math.max(maxY, node.y);
       }
     }
-    return biggestDisplacement;
+
+    this.layoutBounds.x = minX;
+    this.layoutBounds.y = minY;
+    this.layoutBounds.width = maxX - minX;
+    this.layoutBounds.height = maxY - minY;
   }
 
   function attractiveForce(magnitude, k) {

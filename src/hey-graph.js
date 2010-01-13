@@ -3,6 +3,11 @@ function HeyGraph(canvas, context, graphData, layoutTime) {
   this.context = context;
   this.graphData = graphData;
   this.nodesHash = {};
+  this.nodeRenderer = new SimpleNodeRenderer();
+  this.running = false;
+
+  this.FRAMES_PER_SECOND = 30;
+  this.MILLIS_PER_FRAME = 1000 / 30;
 
   for(var nodeIndex in graphData.nodes) {
     var currentNode = graphData.nodes[nodeIndex];
@@ -11,10 +16,6 @@ function HeyGraph(canvas, context, graphData, layoutTime) {
 
   this.layoutTime = layoutTime;
 
-  this.layoutDone = false;
-
-  this.NODE_WIDTH = 20;
-
   this.layout = new ForceDirectedLayout(this.graphData, canvas.width, canvas.height);
 
   var thisGraph = this;
@@ -22,38 +23,37 @@ function HeyGraph(canvas, context, graphData, layoutTime) {
     thisGraph.layout.initialLayout();
     thisGraph.preUpdateTime = new Date().getTime();
     var layoutTimeMaxMillis = thisGraph.layoutTime * 1000;
+    this.running = true;
     var updater = function() {
+      var timeForLastRender = 0;
       this.update = function() {
-        if(thisGraph.layout.update(1000 / 30) || (layoutTimeMaxMillis && new Date().getTime() - thisGraph.preUpdateTime > layoutTimeMaxMillis)) {
-          thisGraph.layoutDone = true;
+        if(thisGraph.layout.update(thisGraph.MILLIS_PER_FRAME - timeForLastRender) || (layoutTimeMaxMillis && new Date().getTime() - thisGraph.preUpdateTime > layoutTimeMaxMillis)) {
+          thisGraph.running = false;
+          thisGraph.render();
           clearInterval(clearUpdateInt);
         }
+
+        var preRenderTime = new Date().getTime();
         thisGraph.render();
+        timeForLastRender = Math.min(thisGraph.MILLIS_PER_FRAME / 2, new Date().getTime() - preRenderTime);
+        console.log("Time for last render was " + timeForLastRender);
       };
 
-      var clearUpdateInt = setInterval(this.update, 1000 / 30);
+      var clearUpdateInt = setInterval(this.update, this.MILLIS_PER_FRAME);
     };
     updater.call();
   };
 
   this.render = function() {
-    var minX = Number.MAX_VALUE;
-    var minY = Number.MAX_VALUE;
-    var maxX = 0;
-    var maxY = 0;
-    for(nodeIndex in this.graphData.nodes) {
-      var node = this.graphData.nodes[nodeIndex];
-      minX = Math.min(minX, node.x);
-      minY = Math.min(minY, node.y);
+    var minX = this.layout.layoutBounds.x;
+    var minY = this.layout.layoutBounds.y;
+    var maxX = this.layout.layoutBounds.x + this.layout.layoutBounds.width;
+    var maxY = this.layout.layoutBounds.y + this.layout.layoutBounds.height;
 
-      maxX = Math.max(maxX, node.x);
-      maxY = Math.max(maxY, node.y);
-    }
-
-    minX -= this.NODE_WIDTH;
-    minY -= this.NODE_WIDTH;
-    maxX += this.NODE_WIDTH;
-    maxY += this.NODE_WIDTH;
+    minX -= this.nodeRenderer.maxNodeDimension;
+    minY -= this.nodeRenderer.maxNodeDimension;
+    maxX += this.nodeRenderer.maxNodeDimension;
+    maxY += this.nodeRenderer.maxNodeDimension;
 
     this.context.save();
 
@@ -71,6 +71,33 @@ function HeyGraph(canvas, context, graphData, layoutTime) {
 
     this.context.translate(((widthBounds / 2) - ((minX + maxX) / 2)), ((heightBounds / 2) - ((minY + maxY) / 2)));
 
+    this.renderEdges();
+
+    for(var nodeIndex in this.graphData.nodes) {
+      var node = this.graphData.nodes[nodeIndex];
+
+      this.nodeRenderer.render(node, context, this);
+    }
+    this.context.restore();
+
+    this.context.save();
+    if(this.running) {
+      context.fillStyle    = '#fff';
+      this.context.strokeStyle = "#fff";     
+
+      var progress = 0;
+      if(thisGraph.layoutTime) {
+        progress = (new Date().getTime() - this.preUpdateTime) / (thisGraph.layoutTime * 1000);
+      }
+      progress = Math.min(1, Math.max(progress, this.layout.layoutProgress));
+      this.context.strokeRect(5, this.canvas.height - 30, 100, 10);
+      this.context.fillRect(5, this.canvas.height - 30, progress * 100, 10);
+    }
+    this.context.restore();
+  };
+
+  this.renderEdges = function() {
+    this.context.save();
     this.context.shadowOffsetX = 3;
     this.context.shadowOffsetY = 3;
     this.context.shadowBlur    = 2;
@@ -86,36 +113,10 @@ function HeyGraph(canvas, context, graphData, layoutTime) {
       this.context.beginPath();
       this.context.moveTo(nodeA.x, nodeA.y); // give the (x,y) coordinates
       this.context.lineTo(nodeB.x, nodeB.y);
-      this.context.stroke();
-      this.context.closePath();
-
-    }
-
-    for(var nodeIndex in this.graphData.nodes) {
-
-      this.context.strokeStyle = "#000";      
-      this.context.fillStyle = "#FFF";
-      this.context.beginPath();
-      this.context.arc(this.graphData.nodes[nodeIndex].x, this.graphData.nodes[nodeIndex].y, this.NODE_WIDTH / 2, 0, Math.PI*2, true);
       this.context.closePath();
       this.context.stroke();
-      this.context.fill();
-    }
-
-    this.context.restore();
-    this.context.save();
-    if(!this.layoutDone) {
-      context.fillStyle    = '#fff';
-      this.context.strokeStyle = "#fff";     
-     // context.font         = 'bold 30px sans-serif';
-      //context.fillText('Laying out ... ' + (this.layout.layoutProgress * 100) + '%', 5, this.canvas.height - 15);
-
-      var progress = (new Date().getTime() - this.preUpdateTime) / (thisGraph.layoutTime * 1000);
-      progress = Math.max(progress, this.layout.layoutProgress);
-      this.context.strokeRect(5, this.canvas.height - 30, 100, 10);
-      this.context.fillRect(5, this.canvas.height - 30, progress * 100, 10);
     }
     this.context.restore();
-  };
+  }
 }
 
