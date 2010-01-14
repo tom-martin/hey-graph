@@ -110,7 +110,7 @@ function ForceDirectedLayout(graphData, width, height) {
       var canvasMagnitude = Math.abs(HeyGraph.VectorUtils.magnitude({"x":this.width, "y":this.height}));
 
 
-      this.minimumTemperature = (graphMagnitude / canvasMagnitude);
+      this.minimumTemperature = Math.max(1, (graphMagnitude / canvasMagnitude));
       this.layoutDone = averageChange < (this.minimumTemperature / 2) && (this.temperature <= this.minimumTemperature);
       this.previousNodePositions = currentNodePositions;
 
