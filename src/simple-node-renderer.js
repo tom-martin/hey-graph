@@ -25,8 +25,8 @@ SimpleNodeRenderer.prototype.render = function(node, context, graph) {
   if(node.graphImageUrl && this.imageCache[node.graphImageUrl] && this.imageCache[node.graphImageUrl] != 'placeholder') {
     // Original resolution: x, y.
     var img = this.imageCache[node.graphImageUrl];
-    var x = node.x - (img.width / 2);
-    var y = node.y - (img.height / 2);
+    var x = (node.x * graph.layoutScale) - (img.width / 2);
+    var y = (node.y * graph.layoutScale) - (img.height / 2);
 
     context.save();
     context.strokeStyle = "#FFF"; 
@@ -46,7 +46,7 @@ SimpleNodeRenderer.prototype.render = function(node, context, graph) {
     var nodeWidth = img.width;
     var nodeHeight = img.height;
   } else {
-    if(node.graphImageUrl && this.imageCache[node.graphImageUrl] != 'placeholder') {
+    if(node.graphImageUrl && this.imageCache[node.graphImageUrl] != 'placeholder' && !graph.running) {
       this.imageCache[node.graphImageUrl] = 'placeholder';
       // Create a new image.
       var img = new Image();
@@ -59,7 +59,7 @@ SimpleNodeRenderer.prototype.render = function(node, context, graph) {
           imageCache[nodeToLoad.graphImageUrl] = this;
           rendererThis.maxNodeDimension = Math.max(rendererThis.maxNodeDimension, this.width);
           rendererThis.maxNodeDimension = Math.max(rendererThis.maxNodeDimension, this.height);
-          graph.render.call(graph);
+          graph.requestRender.call(graph);
         };
       };
       // Once it's loaded draw the image on the canvas.
@@ -68,10 +68,13 @@ SimpleNodeRenderer.prototype.render = function(node, context, graph) {
       img.src = node.graphImageUrl;
     }
 
+    var x = (node.x * graph.layoutScale);
+    var y = (node.y * graph.layoutScale);
+
     context.strokeStyle = "#000";      
     context.fillStyle = "#FFF";
     context.beginPath();
-    context.arc(node.x, node.y, this.NODE_WIDTH / 2, 0, Math.PI*2, true);
+    context.arc(x, y, this.NODE_WIDTH / 2, 0, Math.PI*2, true);
     context.closePath();
     context.stroke();
     context.fill();
@@ -82,7 +85,8 @@ SimpleNodeRenderer.prototype.render = function(node, context, graph) {
     context.fillStyle = "#FFF";
     context.font = 'bold 30px sans-serif';
     var textMetrics = context.measureText(node.graphCaption);
-    context.fillText(node.graphCaption, node.x - (textMetrics.width / 2), node.y + 30 + (nodeHeight / 2));
+    context.fillText(node.graphCaption, (node.x * graph.layoutScale) - (textMetrics.width / 2), (node.y * graph.layoutScale) + 30 + (nodeHeight / 2));
+   // this.maxNodeDimension = Math.max(this.maxNodeDimension, textMetrics.width);
   }
   context.restore();
 };

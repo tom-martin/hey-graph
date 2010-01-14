@@ -5,6 +5,7 @@ function HeyGraph(canvas, context, graphData, layoutTime) {
   this.nodesHash = {};
   this.nodeRenderer = new SimpleNodeRenderer();
   this.running = false;
+  this.layoutScale = 1;
 
   this.FRAMES_PER_SECOND = 30;
   this.MILLIS_PER_FRAME = 1000 / 30;
@@ -34,6 +35,7 @@ function HeyGraph(canvas, context, graphData, layoutTime) {
         }
 
         var preRenderTime = new Date().getTime();
+        this.calculateLayoutScale(this.nodeRenderer.maxNodeDimension);
         thisGraph.render();
         timeForLastRender = Math.min(thisGraph.MILLIS_PER_FRAME / 2, new Date().getTime() - preRenderTime);
       };
@@ -43,11 +45,37 @@ function HeyGraph(canvas, context, graphData, layoutTime) {
     updater.call();
   };
 
+  this.calculateLayoutScale = function(nodeSize) {
+    this.layoutScale = 1;
+    var requiredDistance = Math.sqrt(nodeSize * nodeSize);
+    for(var nodeIndexA in this.graphData.nodes) {
+      var nodeA = this.graphData.nodes[nodeIndexA];
+      
+      for(var nodeIndexB in this.graphData.nodes) {
+        var nodeB = this.graphData.nodes[nodeIndexB];
+        if( nodeA != nodeB &&
+            Math.abs(nodeA.x - nodeB.x) < nodeSize &&
+            Math.abs(nodeA.y - nodeB.y) < nodeSize) {
+          var diff = HeyGraph.VectorUtils.differenceVector(nodeA, nodeB);   
+          var diffMagnitude = Math.abs(HeyGraph.VectorUtils.magnitude(diff));
+          if(diffMagnitude > 0) {
+            this.layoutScale = Math.max(this.layoutScale, (requiredDistance) / diffMagnitude);
+          }
+        }
+      }
+    }
+  };
+
   this.render = function() {
     var minX = this.layout.layoutBounds.x;
     var minY = this.layout.layoutBounds.y;
     var maxX = this.layout.layoutBounds.x + this.layout.layoutBounds.width;
     var maxY = this.layout.layoutBounds.y + this.layout.layoutBounds.height;
+
+    var minX = minX * this.layoutScale;
+    var minY = minY * this.layoutScale;
+    var maxX = maxX * this.layoutScale;
+    var maxY = maxY * this.layoutScale;
 
     minX -= this.nodeRenderer.maxNodeDimension;
     minY -= this.nodeRenderer.maxNodeDimension;
@@ -110,12 +138,28 @@ function HeyGraph(canvas, context, graphData, layoutTime) {
       this.context.strokeStyle = "#FFF";
 
       this.context.beginPath();
-      this.context.moveTo(nodeA.x, nodeA.y); // give the (x,y) coordinates
-      this.context.lineTo(nodeB.x, nodeB.y);
+      this.context.moveTo(nodeA.x * this.layoutScale, nodeA.y * this.layoutScale); // give the (x,y) coordinates
+      this.context.lineTo(nodeB.x * this.layoutScale, nodeB.y * this.layoutScale);
       this.context.closePath();
       this.context.stroke();
     }
     this.context.restore();
   }
+
+  this.renderRequested = false;
+  this.requestRender = function() {
+    if(!this.renderRequested) {
+      this.renderRequested = true;
+      setTimeout(this.renderCallback(), this.MILLIS_PER_FRAME);
+    }
+  };
+
+  this.renderCallback = function() {
+	var thisGraph = this;
+	return function() {
+		  thisGraph.renderRequested = false;
+		  thisGraph.render();
+	  };
+  };
 }
 
