@@ -30,7 +30,17 @@ SimpleNodeRenderer.prototype.render = function(node, context, graph) {
 
     context.save();
     context.strokeStyle = "#FFF"; 
-    context.lineWidth = 3; 
+
+    if(node == graph.highlightedNode) {
+      context.lineWidth = 15; 
+    } else if(HeyGraph.CollectionUtils.contains(graph.highlightedNodeEdges, function() {
+        return this.nodeAId == node.graphId || this.nodeBId == node.graphId;
+      })) {
+      context.lineWidth = 10; 
+    } else {
+      context.lineWidth = 3; 
+    }
+
     this.roundRect(context, x, y, img.width, img.height, 20);
     context.fill();
     context.save();

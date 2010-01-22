@@ -50,4 +50,3 @@ HeyGraph.GraphUtils.allEdgesForNode = function(edges, nodeId) {
             this.nodeBId == nodeId);
   });
 };
-

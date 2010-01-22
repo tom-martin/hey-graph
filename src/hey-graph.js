@@ -6,6 +6,7 @@ function HeyGraph(canvas, context, graphData, layoutTime) {
   this.nodeRenderer = new SimpleNodeRenderer();
   this.running = false;
   this.layoutScale = 1;
+  this.highlightedNodeEdges = [];
 
   this.FRAMES_PER_SECOND = 30;
   this.MILLIS_PER_FRAME = 1000 / 30;
@@ -35,8 +36,8 @@ function HeyGraph(canvas, context, graphData, layoutTime) {
         }
 
         var preRenderTime = new Date().getTime();
-        this.calculateLayoutScale(this.nodeRenderer.maxNodeDimension);
-        thisGraph.render();
+        thisGraph.calculateLayoutScale(thisGraph.nodeRenderer.maxNodeDimension);
+        thisGraph.requestRender();
         timeForLastRender = Math.min(thisGraph.MILLIS_PER_FRAME / 2, new Date().getTime() - preRenderTime);
       };
 
@@ -91,12 +92,16 @@ function HeyGraph(canvas, context, graphData, layoutTime) {
     context.fillStyle = gradient1;
     this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-    var scaleFactor = Math.min(this.canvas.width / (maxX - minX), this.canvas.height / (maxY - minY));
-    this.context.scale(scaleFactor, scaleFactor);
-    var widthBounds = this.canvas.width / scaleFactor;
-    var heightBounds = this.canvas.height / scaleFactor;
+    this.scaleFactor = Math.min(this.canvas.width / (maxX - minX), this.canvas.height / (maxY - minY));
+    this.context.scale(this.scaleFactor, this.scaleFactor);
+    var widthBounds = this.canvas.width / this.scaleFactor;
+    var heightBounds = this.canvas.height / this.scaleFactor;
 
-    this.context.translate(((widthBounds / 2) - ((minX + maxX) / 2)), ((heightBounds / 2) - ((minY + maxY) / 2)));
+    this.nodeScreenSize = this.nodeRenderer.maxNodeDimension / this.scaleFactor;
+
+    this.xTranslation = ((widthBounds / 2) - ((minX + maxX) / 2));
+    this.yTranslation = ((heightBounds / 2) - ((minY + maxY) / 2));
+    this.context.translate(this.xTranslation, this.yTranslation);
 
     this.renderEdges();
 
@@ -136,6 +141,12 @@ function HeyGraph(canvas, context, graphData, layoutTime) {
       var nodeB = this.nodesHash[edge.nodeBId];
 
       this.context.strokeStyle = "#FFF";
+      if(  nodeA == this.highlightedNode ||
+           nodeB == this.highlightedNode) {
+        this.context.lineWidth = 10;
+      } else {
+        this.context.lineWidth = 2;
+      }
 
       this.context.beginPath();
       this.context.moveTo(nodeA.x * this.layoutScale, nodeA.y * this.layoutScale); // give the (x,y) coordinates
@@ -161,5 +172,55 @@ function HeyGraph(canvas, context, graphData, layoutTime) {
 		  thisGraph.render();
 	  };
   };
+
+  var thisGraph = this;
+  canvas.onmousemove = function(e) {
+    if(thisGraph.nodeScreenSize) {
+      var previousHighlight = thisGraph.highlightedNode;
+      var position = findPos(canvas);
+      var offsetX = e.pageX - position[0];
+      offsetX /= thisGraph.scaleFactor;
+      offsetX -= thisGraph.xTranslation;
+      //offsetX /= thisGraph.layoutScale;
+
+      var offsetY = e.pageY - position[1];
+      offsetY /= thisGraph.scaleFactor;
+      offsetY -= thisGraph.yTranslation;
+      //offsetY *= thisGraph.layoutScale;
+
+      for(var nodeIndex in thisGraph.graphData.nodes) {
+        var node = thisGraph.graphData.nodes[nodeIndex];
+        if( Math.abs((node.x * thisGraph.layoutScale) - offsetX) < (thisGraph.nodeRenderer.maxNodeDimension / 2)&&
+            Math.abs((node.y * thisGraph.layoutScale) - offsetY) < (thisGraph.nodeRenderer.maxNodeDimension / 2)) {
+          thisGraph.highlightedNode = node;
+          if(node !== previousHighlight) {
+            thisGraph.highlightedNodeEdges = HeyGraph.GraphUtils.allEdgesForNode(thisGraph.graphData.edges, node.graphId);
+            thisGraph.requestRender();
+          }
+          return;
+        }
+      }
+      
+      thisGraph.highlightedNode = null;
+      if(previousHighlight !== null) {
+        thisGraph.highlightedNodeEdges = [];
+        thisGraph.requestRender();
+      }
+
+    }
+  };
+
+  function findPos(obj) {
+	  var curleft = curtop = 0;
+
+	  if (obj.offsetParent) {
+	    do {
+		    curleft += obj.offsetLeft;
+		    curtop += obj.offsetTop;
+	    } while (obj = obj.offsetParent);
+	    return [curleft,curtop];
+    }
+  }
+
 }
 
