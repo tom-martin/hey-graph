@@ -113,6 +113,7 @@ function SimpleNodeRenderer() {
   this.NODE_WIDTH = 20;
   this.imageCache = {};
   this.maxNodeDimension = this.NODE_WIDTH;
+  this.maxNodeDimensionWithText = this.NODE_WIDTH;
 
   this.roundRect = function(context, x, y, width, height, radius) {
     context.beginPath();
@@ -207,7 +208,7 @@ SimpleNodeRenderer.prototype.render = function(node, context, graph) {
     context.font = 'bold 30px sans-serif';
     var textMetrics = context.measureText(node.graphCaption);
 
-    this.maxNodeDimension = Math.max(this.maxNodeDimension, textMetrics.width);
+    this.maxNodeDimensionWithText = Math.max(this.maxNodeDimension, Math.max(this.maxNodeDimensionWithText, textMetrics.width));
 
     drawText = graph.highlightedNode == null
 
@@ -446,6 +447,11 @@ function HeyGraph(canvas, context, graphData, layoutTime) {
   this.layoutScale = 1;
   this.highlightedNodeEdges = [];
 
+  // TODO Zoom and pan not implemented yet
+  this.zoom = 1;
+  this.offsetX = 0;
+  this.offsetY = 0;
+
   this.FRAMES_PER_SECOND = 30;
   this.MILLIS_PER_FRAME = 1000 / 30;
 
@@ -516,12 +522,16 @@ function HeyGraph(canvas, context, graphData, layoutTime) {
     var maxX = maxX * this.layoutScale;
     var maxY = maxY * this.layoutScale;
 
-    minX -= this.nodeRenderer.maxNodeDimension;
-    minY -= this.nodeRenderer.maxNodeDimension;
-    maxX += this.nodeRenderer.maxNodeDimension;
-    maxY += this.nodeRenderer.maxNodeDimension;
+    var borderSize = Math.max(this.nodeRenderer.maxNodeDimension, this.nodeRenderer.maxNodeDimensionWithText);
+
+    minX -= borderSize;
+    minY -= borderSize;
+    maxX += borderSize;
+    maxY += borderSize;
 
     this.context.save();
+
+    this.context.scale(this.zoom, this.zoom);
 
     var gradient1 = context.createLinearGradient(this.canvas.width / 2, 0, this.canvas.width / 2, this.canvas.height);
 

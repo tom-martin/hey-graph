@@ -8,6 +8,11 @@ function HeyGraph(canvas, context, graphData, layoutTime) {
   this.layoutScale = 1;
   this.highlightedNodeEdges = [];
 
+  // TODO Zoom and pan not implemented yet
+  this.zoom = 1;
+  this.offsetX = 0;
+  this.offsetY = 0;
+
   this.FRAMES_PER_SECOND = 30;
   this.MILLIS_PER_FRAME = 1000 / 30;
 
@@ -78,12 +83,16 @@ function HeyGraph(canvas, context, graphData, layoutTime) {
     var maxX = maxX * this.layoutScale;
     var maxY = maxY * this.layoutScale;
 
-    minX -= this.nodeRenderer.maxNodeDimension;
-    minY -= this.nodeRenderer.maxNodeDimension;
-    maxX += this.nodeRenderer.maxNodeDimension;
-    maxY += this.nodeRenderer.maxNodeDimension;
+    var borderSize = Math.max(this.nodeRenderer.maxNodeDimension, this.nodeRenderer.maxNodeDimensionWithText);
+
+    minX -= borderSize;
+    minY -= borderSize;
+    maxX += borderSize;
+    maxY += borderSize;
 
     this.context.save();
+
+    this.context.scale(this.zoom, this.zoom);
 
     var gradient1 = context.createLinearGradient(this.canvas.width / 2, 0, this.canvas.width / 2, this.canvas.height);
 

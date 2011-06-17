@@ -2,6 +2,7 @@ function SimpleNodeRenderer() {
   this.NODE_WIDTH = 20;
   this.imageCache = {};
   this.maxNodeDimension = this.NODE_WIDTH;
+  this.maxNodeDimensionWithText = this.NODE_WIDTH;
 
   this.roundRect = function(context, x, y, width, height, radius) {
     context.beginPath();
@@ -96,7 +97,7 @@ SimpleNodeRenderer.prototype.render = function(node, context, graph) {
     context.font = 'bold 30px sans-serif';
     var textMetrics = context.measureText(node.graphCaption);
 
-    this.maxNodeDimension = Math.max(this.maxNodeDimension, textMetrics.width);
+    this.maxNodeDimensionWithText = Math.max(this.maxNodeDimension, Math.max(this.maxNodeDimensionWithText, textMetrics.width));
 
     drawText = graph.highlightedNode == null
 
