@@ -95,8 +95,25 @@ SimpleNodeRenderer.prototype.render = function(node, context, graph) {
     context.fillStyle = "#FFF";
     context.font = 'bold 30px sans-serif';
     var textMetrics = context.measureText(node.graphCaption);
-    context.fillText(node.graphCaption, (node.x * graph.layoutScale) - (textMetrics.width / 2), (node.y * graph.layoutScale) + 30 + (nodeHeight / 2));
-   // this.maxNodeDimension = Math.max(this.maxNodeDimension, textMetrics.width);
+
+    this.maxNodeDimension = Math.max(this.maxNodeDimension, textMetrics.width);
+
+    drawText = graph.highlightedNode == null
+
+    if(graph.highlightedNodeEdges !== null) {
+      for(edgeIndex in graph.highlightedNodeEdges) {
+        if( graph.highlightedNodeEdges[edgeIndex].nodeAId == node.graphId || 
+            graph.highlightedNodeEdges[edgeIndex].nodeBId == node.graphId) {
+          drawText = true;
+          break;
+        }
+      }
+    }
+
+    if(drawText) {
+      context.fillText(node.graphCaption, (node.x * graph.layoutScale) - (textMetrics.width / 2), (node.y * graph.layoutScale) + 30 + (nodeHeight / 2));
+    }
   }
+
   context.restore();
 };

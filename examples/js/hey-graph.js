@@ -57,98 +57,6 @@ HeyGraph.VectorUtils.magnitude = function(vector) {
   return Math.sqrt((vector.x * vector.x) + (vector.y * vector.y));
 };
 
-function SimpleNodeRenderer() {
-  this.NODE_WIDTH = 20;
-  this.imageCache = {};
-  this.maxNodeDimension = this.NODE_WIDTH;
-
-  this.roundRect = function(context, x, y, width, height, radius) {
-    context.beginPath();
-    context.moveTo(x + radius, y);
-    context.lineTo(x + width - radius, y);
-    context.arc(x + width - radius, y + radius, radius, Math.PI * 1.5, 0, false);
-    context.lineTo(x + width, y + height - radius);
-    context.arc(x + width - radius, y + height - radius, radius, 0, Math.PI / 2, false);
-    context.lineTo(x + radius, y + height);
-    context.arc(x + radius, y + height - radius, radius, Math.PI / 2, Math.PI,false);
-    context.lineTo(x, y + radius);
-    context.arc(x + radius, y + radius, radius, Math.PI, Math.PI * 1.5,false);
-  };
-};
-
-SimpleNodeRenderer.prototype.render = function(node, context, graph) {
-  context.save();
-  var nodeWidth = this.NODE_WIDTH;
-  var nodeHeight = this.NODE_WIDTH;
-
-  if(node.graphImageUrl && this.imageCache[node.graphImageUrl] && this.imageCache[node.graphImageUrl] != 'placeholder') {
-    // Original resolution: x, y.
-    var img = this.imageCache[node.graphImageUrl];
-    var x = (node.x * graph.layoutFactor) - (img.width / 2);
-    var y = (node.y * graph.layoutFactor) - (img.height / 2);
-
-    context.save();
-    context.strokeStyle = "#FFF"; 
-    context.lineWidth = 3; 
-    this.roundRect(context, x, y, img.width, img.height, 20);
-    context.fill();
-    context.save();
-    this.roundRect(context, x, y, img.width, img.height, 20);
-    context.clip();
-    context.drawImage(img, x, y);
-    context.restore();
-    context.shadowColor = null;
-    this.roundRect(context, x, y, img.width, img.height, 20);
-    context.stroke();
-    context.restore();
-
-    var nodeWidth = img.width;
-    var nodeHeight = img.height;
-  } else {
-    if(node.graphImageUrl && this.imageCache[node.graphImageUrl] != 'placeholder' && !graph.running) {
-      this.imageCache[node.graphImageUrl] = 'placeholder';
-      // Create a new image.
-      var img = new Image();
-
-      var imageCache = this.imageCache;
-      var rendererThis = this;
-      var imageCallback = function(nodeToLoad) {
-        var nodeToLoad = nodeToLoad;
-        return function() {
-          imageCache[nodeToLoad.graphImageUrl] = this;
-          rendererThis.maxNodeDimension = Math.max(rendererThis.maxNodeDimension, this.width);
-          rendererThis.maxNodeDimension = Math.max(rendererThis.maxNodeDimension, this.height);
-          graph.requestRender.call(graph);
-        };
-      };
-      // Once it's loaded draw the image on the canvas.
-      img.addEventListener('load', imageCallback(node), false);
-      
-      img.src = node.graphImageUrl;
-    }
-
-    var x = (node.x * graph.layoutFactor);
-    var y = (node.y * graph.layoutFactor);
-
-    context.strokeStyle = "#000";      
-    context.fillStyle = "#FFF";
-    context.beginPath();
-    context.arc(x, y, this.NODE_WIDTH / 2, 0, Math.PI*2, true);
-    context.closePath();
-    context.stroke();
-    context.fill();
-  }
-
-  if( typeof(context.fillText)=='function' &&
-      node.graphCaption) {
-    context.fillStyle = "#FFF";
-    context.font = 'bold 30px sans-serif';
-    var textMetrics = context.measureText(node.graphCaption);
-    context.fillText(node.graphCaption, (node.x * graph.layoutFactor) - (textMetrics.width / 2), (node.y * graph.layoutFactor) + 30 + (nodeHeight / 2));
-   // this.maxNodeDimension = Math.max(this.maxNodeDimension, textMetrics.width);
-  }
-  context.restore();
-};
 HeyGraph.GraphUtils = HeyGraph.GraphUtils || {};
 
 HeyGraph.GraphUtils.normalizeGraph = function(graphData) {
@@ -201,7 +109,125 @@ HeyGraph.GraphUtils.allEdgesForNode = function(edges, nodeId) {
             this.nodeBId == nodeId);
   });
 };
+function SimpleNodeRenderer() {
+  this.NODE_WIDTH = 20;
+  this.imageCache = {};
+  this.maxNodeDimension = this.NODE_WIDTH;
 
+  this.roundRect = function(context, x, y, width, height, radius) {
+    context.beginPath();
+    context.moveTo(x + radius, y);
+    context.lineTo(x + width - radius, y);
+    context.arc(x + width - radius, y + radius, radius, Math.PI * 1.5, 0, false);
+    context.lineTo(x + width, y + height - radius);
+    context.arc(x + width - radius, y + height - radius, radius, 0, Math.PI / 2, false);
+    context.lineTo(x + radius, y + height);
+    context.arc(x + radius, y + height - radius, radius, Math.PI / 2, Math.PI,false);
+    context.lineTo(x, y + radius);
+    context.arc(x + radius, y + radius, radius, Math.PI, Math.PI * 1.5,false);
+  };
+};
+
+SimpleNodeRenderer.prototype.render = function(node, context, graph) {
+  context.save();
+  var nodeWidth = this.NODE_WIDTH;
+  var nodeHeight = this.NODE_WIDTH;
+
+  if(node.graphImageUrl && this.imageCache[node.graphImageUrl] && this.imageCache[node.graphImageUrl] != 'placeholder') {
+    // Original resolution: x, y.
+    var img = this.imageCache[node.graphImageUrl];
+    var x = (node.x * graph.layoutScale) - (img.width / 2);
+    var y = (node.y * graph.layoutScale) - (img.height / 2);
+
+    context.save();
+    context.strokeStyle = "#FFF"; 
+
+    if(node == graph.highlightedNode) {
+      context.lineWidth = 15; 
+    } else if(HeyGraph.CollectionUtils.contains(graph.highlightedNodeEdges, function() {
+        return this.nodeAId == node.graphId || this.nodeBId == node.graphId;
+      })) {
+      context.lineWidth = 10; 
+    } else {
+      context.lineWidth = 3; 
+    }
+
+    this.roundRect(context, x, y, img.width, img.height, 20);
+    context.fill();
+    context.save();
+    this.roundRect(context, x, y, img.width, img.height, 20);
+    context.clip();
+    context.drawImage(img, x, y);
+    context.restore();
+    context.shadowColor = null;
+    this.roundRect(context, x, y, img.width, img.height, 20);
+    context.stroke();
+    context.restore();
+
+    var nodeWidth = img.width;
+    var nodeHeight = img.height;
+  } else {
+    if(node.graphImageUrl && this.imageCache[node.graphImageUrl] != 'placeholder' && !graph.running) {
+      this.imageCache[node.graphImageUrl] = 'placeholder';
+      // Create a new image.
+      var img = new Image();
+
+      var imageCache = this.imageCache;
+      var rendererThis = this;
+      var imageCallback = function(nodeToLoad) {
+        var nodeToLoad = nodeToLoad;
+        return function() {
+          imageCache[nodeToLoad.graphImageUrl] = this;
+          rendererThis.maxNodeDimension = Math.max(rendererThis.maxNodeDimension, this.width);
+          rendererThis.maxNodeDimension = Math.max(rendererThis.maxNodeDimension, this.height);
+          graph.requestRender.call(graph);
+        };
+      };
+      // Once it's loaded draw the image on the canvas.
+      img.addEventListener('load', imageCallback(node), false);
+      
+      img.src = node.graphImageUrl;
+    }
+
+    var x = (node.x * graph.layoutScale);
+    var y = (node.y * graph.layoutScale);
+
+    context.strokeStyle = "#000";      
+    context.fillStyle = "#FFF";
+    context.beginPath();
+    context.arc(x, y, this.NODE_WIDTH / 2, 0, Math.PI*2, true);
+    context.closePath();
+    context.stroke();
+    context.fill();
+  }
+
+  if( typeof(context.fillText)=='function' &&
+      node.graphCaption) {
+    context.fillStyle = "#FFF";
+    context.font = 'bold 30px sans-serif';
+    var textMetrics = context.measureText(node.graphCaption);
+
+    this.maxNodeDimension = Math.max(this.maxNodeDimension, textMetrics.width);
+
+    drawText = graph.highlightedNode == null
+
+    if(graph.highlightedNodeEdges !== null) {
+      for(edgeIndex in graph.highlightedNodeEdges) {
+        if( graph.highlightedNodeEdges[edgeIndex].nodeAId == node.graphId || 
+            graph.highlightedNodeEdges[edgeIndex].nodeBId == node.graphId) {
+          drawText = true;
+          break;
+        }
+      }
+    }
+
+    if(drawText) {
+      context.fillText(node.graphCaption, (node.x * graph.layoutScale) - (textMetrics.width / 2), (node.y * graph.layoutScale) + 30 + (nodeHeight / 2));
+    }
+  }
+
+  context.restore();
+};
 function ForceDirectedLayout(graphData, width, height) {
   this.width = width;
   this.height = height;
@@ -417,7 +443,8 @@ function HeyGraph(canvas, context, graphData, layoutTime) {
   this.nodesHash = {};
   this.nodeRenderer = new SimpleNodeRenderer();
   this.running = false;
-  this.layoutFactor = 1;
+  this.layoutScale = 1;
+  this.highlightedNodeEdges = [];
 
   this.FRAMES_PER_SECOND = 30;
   this.MILLIS_PER_FRAME = 1000 / 30;
@@ -447,8 +474,8 @@ function HeyGraph(canvas, context, graphData, layoutTime) {
         }
 
         var preRenderTime = new Date().getTime();
-        this.calculateLayoutFactor(this.nodeRenderer.maxNodeDimension);
-        thisGraph.render();
+        thisGraph.calculateLayoutScale(thisGraph.nodeRenderer.maxNodeDimension);
+        thisGraph.requestRender();
         timeForLastRender = Math.min(thisGraph.MILLIS_PER_FRAME / 2, new Date().getTime() - preRenderTime);
       };
 
@@ -457,8 +484,8 @@ function HeyGraph(canvas, context, graphData, layoutTime) {
     updater.call();
   };
 
-  this.calculateLayoutFactor = function(nodeSize) {
-    this.layoutFactor = 1;
+  this.calculateLayoutScale = function(nodeSize) {
+    this.layoutScale = 1;
     var requiredDistance = Math.sqrt(nodeSize * nodeSize);
     for(var nodeIndexA in this.graphData.nodes) {
       var nodeA = this.graphData.nodes[nodeIndexA];
@@ -471,7 +498,7 @@ function HeyGraph(canvas, context, graphData, layoutTime) {
           var diff = HeyGraph.VectorUtils.differenceVector(nodeA, nodeB);   
           var diffMagnitude = Math.abs(HeyGraph.VectorUtils.magnitude(diff));
           if(diffMagnitude > 0) {
-            this.layoutFactor = Math.max(this.layoutFactor, (requiredDistance) / diffMagnitude);
+            this.layoutScale = Math.max(this.layoutScale, (requiredDistance) / diffMagnitude);
           }
         }
       }
@@ -484,10 +511,10 @@ function HeyGraph(canvas, context, graphData, layoutTime) {
     var maxX = this.layout.layoutBounds.x + this.layout.layoutBounds.width;
     var maxY = this.layout.layoutBounds.y + this.layout.layoutBounds.height;
 
-    var minX = minX * this.layoutFactor;
-    var minY = minY * this.layoutFactor;
-    var maxX = maxX * this.layoutFactor;
-    var maxY = maxY * this.layoutFactor;
+    var minX = minX * this.layoutScale;
+    var minY = minY * this.layoutScale;
+    var maxX = maxX * this.layoutScale;
+    var maxY = maxY * this.layoutScale;
 
     minX -= this.nodeRenderer.maxNodeDimension;
     minY -= this.nodeRenderer.maxNodeDimension;
@@ -503,12 +530,16 @@ function HeyGraph(canvas, context, graphData, layoutTime) {
     context.fillStyle = gradient1;
     this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-    var scaleFactor = Math.min(this.canvas.width / (maxX - minX), this.canvas.height / (maxY - minY));
-    this.context.scale(scaleFactor, scaleFactor);
-    var widthBounds = this.canvas.width / scaleFactor;
-    var heightBounds = this.canvas.height / scaleFactor;
+    this.scaleFactor = Math.min(this.canvas.width / (maxX - minX), this.canvas.height / (maxY - minY));
+    this.context.scale(this.scaleFactor, this.scaleFactor);
+    var widthBounds = this.canvas.width / this.scaleFactor;
+    var heightBounds = this.canvas.height / this.scaleFactor;
 
-    this.context.translate(((widthBounds / 2) - ((minX + maxX) / 2)), ((heightBounds / 2) - ((minY + maxY) / 2)));
+    this.nodeScreenSize = this.nodeRenderer.maxNodeDimension / this.scaleFactor;
+
+    this.xTranslation = ((widthBounds / 2) - ((minX + maxX) / 2));
+    this.yTranslation = ((heightBounds / 2) - ((minY + maxY) / 2));
+    this.context.translate(this.xTranslation, this.yTranslation);
 
     this.renderEdges();
 
@@ -548,10 +579,16 @@ function HeyGraph(canvas, context, graphData, layoutTime) {
       var nodeB = this.nodesHash[edge.nodeBId];
 
       this.context.strokeStyle = "#FFF";
+      if(  nodeA == this.highlightedNode ||
+           nodeB == this.highlightedNode) {
+        this.context.lineWidth = 10;
+      } else {
+        this.context.lineWidth = 2;
+      }
 
       this.context.beginPath();
-      this.context.moveTo(nodeA.x * this.layoutFactor, nodeA.y * this.layoutFactor); // give the (x,y) coordinates
-      this.context.lineTo(nodeB.x * this.layoutFactor, nodeB.y * this.layoutFactor);
+      this.context.moveTo(nodeA.x * this.layoutScale, nodeA.y * this.layoutScale); // give the (x,y) coordinates
+      this.context.lineTo(nodeB.x * this.layoutScale, nodeB.y * this.layoutScale);
       this.context.closePath();
       this.context.stroke();
     }
@@ -573,5 +610,55 @@ function HeyGraph(canvas, context, graphData, layoutTime) {
 		  thisGraph.render();
 	  };
   };
+
+  var thisGraph = this;
+  canvas.onmousemove = function(e) {
+    if(thisGraph.nodeScreenSize) {
+      var previousHighlight = thisGraph.highlightedNode;
+      var position = findPos(canvas);
+      var offsetX = e.pageX - position[0];
+      offsetX /= thisGraph.scaleFactor;
+      offsetX -= thisGraph.xTranslation;
+      //offsetX /= thisGraph.layoutScale;
+
+      var offsetY = e.pageY - position[1];
+      offsetY /= thisGraph.scaleFactor;
+      offsetY -= thisGraph.yTranslation;
+      //offsetY *= thisGraph.layoutScale;
+
+      for(var nodeIndex in thisGraph.graphData.nodes) {
+        var node = thisGraph.graphData.nodes[nodeIndex];
+        if( Math.abs((node.x * thisGraph.layoutScale) - offsetX) < (thisGraph.nodeRenderer.maxNodeDimension / 2)&&
+            Math.abs((node.y * thisGraph.layoutScale) - offsetY) < (thisGraph.nodeRenderer.maxNodeDimension / 2)) {
+          thisGraph.highlightedNode = node;
+          if(node !== previousHighlight) {
+            thisGraph.highlightedNodeEdges = HeyGraph.GraphUtils.allEdgesForNode(thisGraph.graphData.edges, node.graphId);
+            thisGraph.requestRender();
+          }
+          return;
+        }
+      }
+      
+      thisGraph.highlightedNode = null;
+      if(previousHighlight !== null) {
+        thisGraph.highlightedNodeEdges = [];
+        thisGraph.requestRender();
+      }
+
+    }
+  };
+
+  function findPos(obj) {
+	  var curleft = curtop = 0;
+
+	  if (obj.offsetParent) {
+	    do {
+		    curleft += obj.offsetLeft;
+		    curtop += obj.offsetTop;
+	    } while (obj = obj.offsetParent);
+	    return [curleft,curtop];
+    }
+  }
+
 }
 

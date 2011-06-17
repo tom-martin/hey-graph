@@ -59,6 +59,7 @@ function createRandomGraph(mesh) {
     for(var nodeIndex = 0; nodeIndex < nodeCount; nodeIndex ++) {
       var newNode = {};
       newNode.graphId = "id" + nodeIndex;
+      newNode.graphCaption = "label for " + nodeIndex
       graphData.nodes.push(newNode);
     }
 
@@ -128,6 +129,7 @@ function createMesh() {
   for(var nodeIndex = 0; nodeIndex < meshSize * meshSize; nodeIndex ++) {
     var newNode = {};
     newNode.graphId = "id" + nodeIndex;
+    newNode.graphCaption = "label for " + nodeIndex
     graphData.nodes.push(newNode);
   }
 
