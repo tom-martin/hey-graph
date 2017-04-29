@@ -4,7 +4,7 @@ function SimpleNodeRenderer() {
   this.maxNodeDimension = this.NODE_WIDTH;
   this.maxNodeDimensionWithText = this.NODE_WIDTH;
 
-  this.roundRect = function(context, x, y, width, height, radius) {
+  this.roundRect = (context, x, y, width, height, radius) => {
     context.beginPath();
     context.moveTo(x + radius, y);
     context.lineTo(x + width - radius, y);
@@ -64,7 +64,7 @@ SimpleNodeRenderer.prototype.render = function(node, context, graph) {
 
       var imageCache = this.imageCache;
       var rendererThis = this;
-      var imageCallback = function(nodeToLoad) {
+      var imageCallback = nodeToLoad => {
         var nodeToLoad = nodeToLoad;
         return function() {
           imageCache[nodeToLoad.graphImageUrl] = this;

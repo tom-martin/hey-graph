@@ -38,15 +38,11 @@ HeyGraph.GraphUtils.addNodeToGraph = function(node, newGraph, graphData) {
   }
 };
 
-HeyGraph.GraphUtils.findNodeForId = function(nodeId, graphData) {
-  return HeyGraph.CollectionUtils.find(graphData.nodes, function() {
-    return nodeId == this.graphId;
-  });
-}
+HeyGraph.GraphUtils.findNodeForId = (nodeId, graphData) => HeyGraph.CollectionUtils.find(graphData.nodes, function() {
+  return nodeId == this.graphId;
+})
 
-HeyGraph.GraphUtils.allEdgesForNode = function(edges, nodeId) {
-  return HeyGraph.CollectionUtils.filter(edges, function(edge) {
-    return (this.nodeAId == nodeId ||
-            this.nodeBId == nodeId);
-  });
-};
+HeyGraph.GraphUtils.allEdgesForNode = (edges, nodeId) => HeyGraph.CollectionUtils.filter(edges, function(edge) {
+  return (this.nodeAId == nodeId ||
+          this.nodeBId == nodeId);
+});

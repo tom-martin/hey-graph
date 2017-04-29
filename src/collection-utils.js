@@ -4,7 +4,7 @@ HeyGraph.CollectionUtils.contains = function(container, callback) {
   return this.find(container, callback) != null;
 };
 
-HeyGraph.CollectionUtils.find = function(container, callback) {
+HeyGraph.CollectionUtils.find = (container, callback) => {
   for(var index in container) {
     var potential = container[index];
     if(callback.call(potential)) {
@@ -15,7 +15,7 @@ HeyGraph.CollectionUtils.find = function(container, callback) {
   return null;
 };
 
-HeyGraph.CollectionUtils.filter = function(container, callback) {
+HeyGraph.CollectionUtils.filter = (container, callback) => {
   var matches = [];
   for(var index in container) {
     var potential = container[index];
@@ -27,7 +27,7 @@ HeyGraph.CollectionUtils.filter = function(container, callback) {
   return matches;
 };
 
-HeyGraph.CollectionUtils.reduce = function(container, callback, initial) {
+HeyGraph.CollectionUtils.reduce = (container, callback, initial) => {
   var current = null;
   for(var index in container) {
     if(current == null) {
