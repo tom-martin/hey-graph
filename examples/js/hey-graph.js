@@ -5,7 +5,7 @@ HeyGraph.CollectionUtils.contains = function(container, callback) {
   return this.find(container, callback) != null;
 };
 
-HeyGraph.CollectionUtils.find = function(container, callback) {
+HeyGraph.CollectionUtils.find = (container, callback) => {
   for(var index in container) {
     var potential = container[index];
     if(callback.call(potential)) {
@@ -16,7 +16,7 @@ HeyGraph.CollectionUtils.find = function(container, callback) {
   return null;
 };
 
-HeyGraph.CollectionUtils.filter = function(container, callback) {
+HeyGraph.CollectionUtils.filter = (container, callback) => {
   var matches = [];
   for(var index in container) {
     var potential = container[index];
@@ -28,7 +28,7 @@ HeyGraph.CollectionUtils.filter = function(container, callback) {
   return matches;
 };
 
-HeyGraph.CollectionUtils.reduce = function(container, callback, initial) {
+HeyGraph.CollectionUtils.reduce = (container, callback, initial) => {
   var current = null;
   for(var index in container) {
     if(current == null) {
@@ -46,16 +46,14 @@ HeyGraph.CollectionUtils.reduce = function(container, callback, initial) {
 };
 HeyGraph.VectorUtils = HeyGraph.VectorUtils || {};
 
-HeyGraph.VectorUtils.differenceVector = function(vectorA, vectorB) {
+HeyGraph.VectorUtils.differenceVector = (vectorA, vectorB) => {
   var diff = {};
   diff.x = vectorA.x - vectorB.x;
   diff.y = vectorA.y - vectorB.y;
   return diff;
 }
 
-HeyGraph.VectorUtils.magnitude = function(vector) {
-  return Math.sqrt((vector.x * vector.x) + (vector.y * vector.y));
-};
+HeyGraph.VectorUtils.magnitude = vector => Math.sqrt((vector.x * vector.x) + (vector.y * vector.y));
 
 HeyGraph.GraphUtils = HeyGraph.GraphUtils || {};
 
@@ -97,25 +95,21 @@ HeyGraph.GraphUtils.addNodeToGraph = function(node, newGraph, graphData) {
   }
 };
 
-HeyGraph.GraphUtils.findNodeForId = function(nodeId, graphData) {
-  return HeyGraph.CollectionUtils.find(graphData.nodes, function() {
-    return nodeId == this.graphId;
-  });
-}
+HeyGraph.GraphUtils.findNodeForId = (nodeId, graphData) => HeyGraph.CollectionUtils.find(graphData.nodes, function() {
+  return nodeId == this.graphId;
+})
 
-HeyGraph.GraphUtils.allEdgesForNode = function(edges, nodeId) {
-  return HeyGraph.CollectionUtils.filter(edges, function(edge) {
-    return (this.nodeAId == nodeId ||
-            this.nodeBId == nodeId);
-  });
-};
+HeyGraph.GraphUtils.allEdgesForNode = (edges, nodeId) => HeyGraph.CollectionUtils.filter(edges, function(edge) {
+  return (this.nodeAId == nodeId ||
+          this.nodeBId == nodeId);
+});
 function SimpleNodeRenderer() {
   this.NODE_WIDTH = 20;
   this.imageCache = {};
   this.maxNodeDimension = this.NODE_WIDTH;
   this.maxNodeDimensionWithText = this.NODE_WIDTH;
 
-  this.roundRect = function(context, x, y, width, height, radius) {
+  this.roundRect = (context, x, y, width, height, radius) => {
     context.beginPath();
     context.moveTo(x + radius, y);
     context.lineTo(x + width - radius, y);
@@ -175,7 +169,7 @@ SimpleNodeRenderer.prototype.render = function(node, context, graph) {
 
       var imageCache = this.imageCache;
       var rendererThis = this;
-      var imageCallback = function(nodeToLoad) {
+      var imageCallback = nodeToLoad => {
         var nodeToLoad = nodeToLoad;
         return function() {
           imageCache[nodeToLoad.graphImageUrl] = this;
@@ -472,7 +466,7 @@ function HeyGraph(canvas, context, graphData, layoutTime) {
     this.running = true;
     var updater = function() {
       var timeForLastRender = 0;
-      this.update = function() {
+      this.update = () => {
         if(thisGraph.layout.update(thisGraph.MILLIS_PER_FRAME - timeForLastRender) || (layoutTimeMaxMillis && new Date().getTime() - thisGraph.preUpdateTime > layoutTimeMaxMillis)) {
           thisGraph.running = false;
           thisGraph.render();
@@ -615,14 +609,14 @@ function HeyGraph(canvas, context, graphData, layoutTime) {
 
   this.renderCallback = function() {
 	var thisGraph = this;
-	return function() {
+	return () => {
 		  thisGraph.renderRequested = false;
 		  thisGraph.render();
 	  };
   };
 
   var thisGraph = this;
-  canvas.onmousemove = function(e) {
+  canvas.onmousemove = e => {
     if(thisGraph.nodeScreenSize) {
       var previousHighlight = thisGraph.highlightedNode;
       var position = findPos(canvas);

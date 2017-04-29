@@ -33,7 +33,7 @@ function HeyGraph(canvas, context, graphData, layoutTime) {
     this.running = true;
     var updater = function() {
       var timeForLastRender = 0;
-      this.update = function() {
+      this.update = () => {
         if(thisGraph.layout.update(thisGraph.MILLIS_PER_FRAME - timeForLastRender) || (layoutTimeMaxMillis && new Date().getTime() - thisGraph.preUpdateTime > layoutTimeMaxMillis)) {
           thisGraph.running = false;
           thisGraph.render();
@@ -176,14 +176,14 @@ function HeyGraph(canvas, context, graphData, layoutTime) {
 
   this.renderCallback = function() {
 	var thisGraph = this;
-	return function() {
+	return () => {
 		  thisGraph.renderRequested = false;
 		  thisGraph.render();
 	  };
   };
 
   var thisGraph = this;
-  canvas.onmousemove = function(e) {
+  canvas.onmousemove = e => {
     if(thisGraph.nodeScreenSize) {
       var previousHighlight = thisGraph.highlightedNode;
       var position = findPos(canvas);
